@@ -81,10 +81,9 @@ if uploaded_file is not None:
             file_name="relatorio_field_analysis.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
     with col2:
-        st.subheader("🖼️ Imagem da Análise")
-        # Gera a imagem da análise usando matplotlib
-        fig, ax = plt.subplots(figsize=(6, 6))
-        fa.plot_analyzed_image(ax=ax)
-        st.pyplot(fig)
+    st.subheader("🖼️ Imagem da Análise")
+    fa.plot_analyzed_image()  # Gera a imagem
+    fig = plt.gcf()  # Captura a figura atual
+    st.pyplot(fig)
+
