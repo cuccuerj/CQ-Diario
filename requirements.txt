@@ -2,3 +2,4 @@ streamlit
 pandas
 pylinac
 openpyxl
+XlsxWriter==3.2.0
