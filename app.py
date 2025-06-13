@@ -4,6 +4,7 @@ from pylinac import FieldAnalysis
 import tempfile
 import os
 from io import BytesIO  # para gerar Excel em memória
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Análise de Campo - Pylinac", layout="centered")
 
@@ -47,32 +48,43 @@ if uploaded_file is not None:
     st.subheader("📋 Resultados")
 
 
-    # Criar DataFrame e transpor (métricas em uma coluna, valores em outra)
+    # Transpor resultados para formato vertical
     df = pd.DataFrame(list(resultados.items()), columns=["Métrica", "Valor"])
 
-    # Mostrar como tabela interativa
-    st.dataframe(df, use_container_width=True)
+    # Dividir a página em duas colunas
+    col1, col2 = st.columns(2)
 
-    # Gerar texto tabular para copiar e colar
-    texto_tabela = df.to_csv(sep="\t", index=False)
+    with col1:
+        st.subheader("📋 Resultados")
+        st.dataframe(df, use_container_width=True)
 
-    st.markdown("### 📋 Copiar e colar no Excel")
-    st.text_area("Selecione e copie (CTRL+C ou CMD+C):", value=texto_tabela, height=300)
+        # Texto tabular para copiar e colar no Excel
+        texto_tabela = df.to_csv(sep="\t", index=False)
 
-    # Gerar Excel em memória para download
-    def gerar_excel_em_memoria(dataframe):
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            dataframe.to_excel(writer, index=False, sheet_name="Resultados")
-        output.seek(0)
-        return output
+        st.markdown("### 📋 Copiar e colar no Excel")
+        st.text_area("Selecione e copie (CTRL+C ou CMD+C):", value=texto_tabela, height=300)
 
-    excel_bytes = gerar_excel_em_memoria(df)
+        # Gerar Excel em memória
+        def gerar_excel_em_memoria(dataframe):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                dataframe.to_excel(writer, index=False, sheet_name="Resultados")
+            output.seek(0)
+            return output
 
-    # Botão de download
-    st.download_button(
-        label="📥 Baixar resultados em Excel",
-        data=excel_bytes,
-        file_name="relatorio_field_analysis.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        excel_bytes = gerar_excel_em_memoria(df)
+
+        # Botão de download
+        st.download_button(
+            label="📥 Baixar resultados em Excel",
+            data=excel_bytes,
+            file_name="relatorio_field_analysis.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    with col2:
+        st.subheader("🖼️ Imagem da Análise")
+        # Gera a imagem da análise usando matplotlib
+        fig, ax = plt.subplots(figsize=(6, 6))
+        fa.plot_analyzed_image(ax=ax)
+        st.pyplot(fig)
