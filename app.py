@@ -3,6 +3,7 @@ import pandas as pd
 from pylinac import FieldAnalysis
 import tempfile
 import os
+from io import BytesIO  # para gerar Excel em memória
 
 st.set_page_config(page_title="Análise de Campo - Pylinac", layout="centered")
 
@@ -13,7 +14,7 @@ st.write("Faça upload de um arquivo DICOM de imagem de campo para análise.")
 uploaded_file = st.file_uploader("Selecione um arquivo DICOM", type=["dcm"])
 
 if uploaded_file is not None:
-    # Salva temporariamente o arquivo
+    # Salva temporariamente o arquivo DICOM
     with tempfile.NamedTemporaryFile(delete=False, suffix=".dcm") as temp_file:
         temp_file.write(uploaded_file.read())
         dicom_path = temp_file.name
@@ -45,39 +46,35 @@ if uploaded_file is not None:
     st.success("✅ Análise concluída com sucesso!")
     st.subheader("📋 Resultados")
 
-    # Criar 3 colunas para mostrar os resultados
+    # Mostrar resultados em 3 colunas
     cols = st.columns(3)
     items = list(resultados.items())
-    total_items = len(items)
-    col_len = (total_items + 2) // 3  # arredonda pra cima
+    col_len = (len(items) + 2) // 3  # para dividir igualmente
 
     for i, col in enumerate(cols):
-        start_idx = i * col_len
-        end_idx = start_idx + col_len
-        for key, value in items[start_idx:end_idx]:
+        for key, value in items[i * col_len: (i + 1) * col_len]:
             col.markdown(f"**{key}:** {value}")
 
-    # Gerar DataFrame para o Excel
+    # Criar DataFrame para exportar
     df = pd.DataFrame([resultados])
 
-    @st.cache_data
-    def gerar_excel(df):
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-            df.to_excel(tmp.name, index=False)
-            return tmp.name
+    # Gerar Excel em memória
+    def gerar_excel_em_memoria(dataframe):
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            dataframe.to_excel(writer, index=False, sheet_name="Resultados")
+        output.seek(0)
+        return output
 
-    excel_path = gerar_excel(df)
+    excel_bytes = gerar_excel_em_memoria(df)
 
-    # Lê o arquivo em bytes, remove arquivo e disponibiliza para download
-    with open(excel_path, "rb") as file:
-        data = file.read()
-
-    os.remove(dicom_path)
-    os.remove(excel_path)
-
+    # Botão para download
     st.download_button(
         label="📥 Baixar resultados em Excel",
-        data=data,
+        data=excel_bytes,
         file_name="relatorio_field_analysis.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+
+    # Remover o arquivo DICOM temporário
+    os.remove(dicom_path)
