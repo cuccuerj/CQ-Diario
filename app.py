@@ -58,13 +58,10 @@ if uploaded_file is not None:
         st.subheader("📋 Resultados")
         st.dataframe(df, use_container_width=True)
 
-        # Texto tabular para copiar e colar no Excel
         texto_tabela = df.to_csv(sep="\t", index=False)
-
         st.markdown("### 📋 Copiar e colar no Excel")
         st.text_area("Selecione e copie (CTRL+C ou CMD+C):", value=texto_tabela, height=300)
 
-        # Gerar Excel em memória
         def gerar_excel_em_memoria(dataframe):
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -74,16 +71,15 @@ if uploaded_file is not None:
 
         excel_bytes = gerar_excel_em_memoria(df)
 
-        # Botão de download
         st.download_button(
             label="📥 Baixar resultados em Excel",
             data=excel_bytes,
             file_name="relatorio_field_analysis.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-    with col2:
-    st.subheader("🖼️ Imagem da Análise")
-    fa.plot_analyzed_image()  # Gera a imagem
-    fig = plt.gcf()  # Captura a figura atual
-    st.pyplot(fig)
 
+    with col2:
+        st.subheader("🖼️ Imagem da Análise")
+        fa.plot_analyzed_image()  # Gera a imagem
+        fig = plt.gcf()  # Captura a figura atual
+        st.pyplot(fig)
