@@ -42,13 +42,23 @@ if uploaded_file is not None:
         "Penumbra Inferior (mm)": round(data.bottom_penumbra_mm, 1)
     }
 
-    df = pd.DataFrame([resultados])
-
     st.success("✅ Análise concluída com sucesso!")
-
-    # Exibe os dados na tela
     st.subheader("📋 Resultados")
-    st.dataframe(df)
+
+    # Dividir os resultados em 3 colunas
+    items = list(resultados.items())
+    n = len(items)
+    chunk_size = (n + 2) // 3  # divisão arredondada para cima
+
+    cols = st.columns(3)
+
+    for i, col in enumerate(cols):
+        chunk = items[i*chunk_size : (i+1)*chunk_size]
+        for key, value in chunk:
+            col.write(f"**{key}:** {value}")
+
+    # Gerar DataFrame para Excel
+    df = pd.DataFrame([resultados])
 
     # Botão para baixar o Excel
     @st.cache_data
@@ -67,6 +77,6 @@ if uploaded_file is not None:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-    # Limpa arquivo temporário
+    # Limpa arquivos temporários
     os.remove(dicom_path)
     os.remove(excel_path)
