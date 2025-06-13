@@ -46,19 +46,20 @@ if uploaded_file is not None:
     st.success("✅ Análise concluída com sucesso!")
     st.subheader("📋 Resultados")
 
-    # Mostrar resultados em 3 colunas
-    cols = st.columns(3)
-    items = list(resultados.items())
-    col_len = (len(items) + 2) // 3  # para dividir igualmente
 
-    for i, col in enumerate(cols):
-        for key, value in items[i * col_len: (i + 1) * col_len]:
-            col.markdown(f"**{key}:** {value}")
+    # Criar DataFrame e transpor (métricas em uma coluna, valores em outra)
+    df = pd.DataFrame(list(resultados.items()), columns=["Métrica", "Valor"])
 
-    # Criar DataFrame para exportar
-    df = pd.DataFrame([resultados])
+    # Mostrar como tabela interativa
+    st.dataframe(df, use_container_width=True)
 
-    # Gerar Excel em memória
+    # Gerar texto tabular para copiar e colar
+    texto_tabela = df.to_csv(sep="\t", index=False)
+
+    st.markdown("### 📋 Copiar e colar no Excel")
+    st.text_area("Selecione e copie (CTRL+C ou CMD+C):", value=texto_tabela, height=300)
+
+    # Gerar Excel em memória para download
     def gerar_excel_em_memoria(dataframe):
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -68,13 +69,10 @@ if uploaded_file is not None:
 
     excel_bytes = gerar_excel_em_memoria(df)
 
-    # Botão para download
+    # Botão de download
     st.download_button(
         label="📥 Baixar resultados em Excel",
         data=excel_bytes,
         file_name="relatorio_field_analysis.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-    # Remover o arquivo DICOM temporário
-    os.remove(dicom_path)
