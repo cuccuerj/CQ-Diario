@@ -45,22 +45,23 @@ if uploaded_file is not None:
     st.success("✅ Análise concluída com sucesso!")
     st.subheader("📋 Resultados")
 
-    # Dividir os resultados em 3 colunas
-    items = list(resultados.items())
-    n = len(items)
-    chunk_size = (n + 2) // 3  # divisão arredondada para cima
-
+    # Criar 3 colunas para mostrar os resultados
     cols = st.columns(3)
+    items = list(resultados.items())
+    total_items = len(items)
+    # calcular tamanho aproximado de cada coluna
+    col_len = (total_items + 2) // 3  # arredonda pra cima
 
+    # Para cada coluna, exibir a fatia correspondente dos dados
     for i, col in enumerate(cols):
-        chunk = items[i*chunk_size : (i+1)*chunk_size]
-        for key, value in chunk:
-            col.write(f"**{key}:** {value}")
+        start_idx = i * col_len
+        end_idx = start_idx + col_len
+        for key, value in items[start_idx:end_idx]:
+            col.markdown(f"**{key}:** {value}")
 
-    # Gerar DataFrame para Excel
+    # Gerar DataFrame para o Excel (ainda útil para download)
     df = pd.DataFrame([resultados])
 
-    # Botão para baixar o Excel
     @st.cache_data
     def gerar_excel(df):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
@@ -77,6 +78,6 @@ if uploaded_file is not None:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-    # Limpa arquivos temporários
+    # Remove os arquivos temporários
     os.remove(dicom_path)
     os.remove(excel_path)
