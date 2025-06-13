@@ -49,17 +49,15 @@ if uploaded_file is not None:
     cols = st.columns(3)
     items = list(resultados.items())
     total_items = len(items)
-    # calcular tamanho aproximado de cada coluna
     col_len = (total_items + 2) // 3  # arredonda pra cima
 
-    # Para cada coluna, exibir a fatia correspondente dos dados
     for i, col in enumerate(cols):
         start_idx = i * col_len
         end_idx = start_idx + col_len
         for key, value in items[start_idx:end_idx]:
             col.markdown(f"**{key}:** {value}")
 
-    # Gerar DataFrame para o Excel (ainda útil para download)
+    # Gerar DataFrame para o Excel
     df = pd.DataFrame([resultados])
 
     @st.cache_data
@@ -70,14 +68,16 @@ if uploaded_file is not None:
 
     excel_path = gerar_excel(df)
 
+    # Lê o arquivo em bytes, remove arquivo e disponibiliza para download
     with open(excel_path, "rb") as file:
-        st.download_button(
-            label="📥 Baixar resultados em Excel",
-            data=file,
-            file_name="relatorio_field_analysis.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        data = file.read()
 
-    # Remove os arquivos temporários
     os.remove(dicom_path)
     os.remove(excel_path)
+
+    st.download_button(
+        label="📥 Baixar resultados em Excel",
+        data=data,
+        file_name="relatorio_field_analysis.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
